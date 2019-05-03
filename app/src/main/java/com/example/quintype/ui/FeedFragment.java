@@ -20,7 +20,6 @@ import com.example.quintype.R;
 import com.example.quintype.data.entity.Collection;
 import com.example.quintype.data.entity.Item;
 import com.example.quintype.datamodel.Status;
-import com.example.quintype.viewmodel.CollectionViewModel;
 import com.example.quintype.viewmodel.FeedViewModel;
 
 import java.util.List;
@@ -104,10 +103,12 @@ public class FeedFragment extends Fragment implements ItemAdater.ItemAdaterListn
             @Override
             public void onChanged(Status status) {
                 if(status == Status.FAILURE){
-                    Toast.makeText(getContext(), "Unable to fetch feed from server", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Unable to fetch feed from server", Toast.LENGTH_LONG).show();
                 }
             }
         };
+
+        feedviewModel.checkForDataExiry();
     }
 
     @Override
@@ -176,6 +177,11 @@ public class FeedFragment extends Fragment implements ItemAdater.ItemAdaterListn
     public void removeObserver(Observer<Collection> observer, Item item) {
         feedviewModel.getCollectionLiveData(item).removeObserver(observer);
 
+    }
+
+    @Override
+    public void onStorySelected(Item item) {
+        mListener.navigateTo(FeedFragmentDirections.actionFeedFragmentToItemFragment(item.getStory().getHeroImage()));
     }
 
 

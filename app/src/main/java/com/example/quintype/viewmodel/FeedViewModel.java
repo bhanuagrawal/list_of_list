@@ -18,6 +18,11 @@ import java.util.List;
 
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.SingleObserver;
+import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Action;
@@ -34,7 +39,6 @@ public class FeedViewModel extends AndroidViewModel {
     public FeedViewModel(@NonNull Application application) {
         super(application);
         itemsRepo = new ItemsRepo(application);
-        getFeedFromNetwork();
     }
 
     public MutableLiveData<Status> getFeedStatusLiveData() {
@@ -58,6 +62,7 @@ public class FeedViewModel extends AndroidViewModel {
                         public void run() throws Exception {
                             itemsRepo.clearCache();
                             itemsRepo.addToCache(response.body());
+                            itemsRepo.setCacheExipyTime();
                         }
                     }).observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io()).subscribe(new CompletableObserver() {
@@ -78,6 +83,9 @@ public class FeedViewModel extends AndroidViewModel {
                         }
 
                     });
+                }
+                else{
+                    getFeedStatusLiveData().postValue(Status.FAILURE);
                 }
             }
 
@@ -137,5 +145,35 @@ public class FeedViewModel extends AndroidViewModel {
                 Log.e("collection", "network failure");
             }
         });
+    }
+
+    public void checkForDataExiry() {
+        Single.create(new SingleOnSubscribe<Boolean>() {
+            @Override
+            public void subscribe(SingleEmitter<Boolean> emitter) throws Exception {
+                Boolean isCacheExpired = itemsRepo.isCacheExpired();
+                emitter.onSuccess(isCacheExpired);
+            }
+        }).observeOn(Schedulers.io())
+            .subscribeOn(AndroidSchedulers.mainThread())
+            .subscribe(new SingleObserver<Boolean>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onSuccess(Boolean aBoolean) {
+                    if(aBoolean){
+                        getFeedFromNetwork();
+                    }
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    Log.e("checkForDataExiry", "failure");
+
+                }
+            });
     }
 }
