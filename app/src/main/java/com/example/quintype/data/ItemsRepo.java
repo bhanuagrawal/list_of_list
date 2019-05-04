@@ -26,6 +26,7 @@ public class ItemsRepo {
     private static final String CACHE_EXPIRY_TINE = "cache_expiry_time";
     private final SharedPreferences sharedPreferences;
     private final Calendar calendar;
+    private final SharedPreferences.Editor editor;
     Application application;
     AppDatabase appDatabase;
     FeedService feedService;
@@ -35,6 +36,7 @@ public class ItemsRepo {
         appDatabase = AppDatabase.getInstance(application);
         feedService = Clients.getNewsClient().create(FeedService.class);
         sharedPreferences = application.getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        editor = sharedPreferences.edit();
         calendar = Calendar.getInstance();
 
 
@@ -78,8 +80,9 @@ public class ItemsRepo {
         calendar.setTime(dt);
         calendar.add(Calendar.DATE, 1);
         dt = calendar.getTime();
-        sharedPreferences.edit().putString(CACHE_EXPIRY_TINE, String.valueOf(dt.getTime()));
-        sharedPreferences.edit().apply();
+        String currentTimestamp = String.valueOf(dt.getTime());
+        editor.putString(CACHE_EXPIRY_TINE, currentTimestamp);
+        editor.apply();
     }
 
 
